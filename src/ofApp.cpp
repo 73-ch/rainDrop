@@ -10,17 +10,13 @@ void ofApp::setup(){
     main_scene.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
     
     // texcoordを作る部分
-    texcoord_scene.allocate(ofGetWidth(), ofGetHeight());
-    texcoord_shader.setupShaderFromFile(GL_FRAGMENT_SHADER, "texcoord.frag");
-    texcoord_shader.bindDefaults();
-    texcoord_shader.linkProgram();
+    texcoord_scene.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
+    texcoord_shader.load("default.vert", "texcoord.frag");
     
     
     // 最後にテクスチャを参照してレンダリングする部分
-    refer_texture_shader.setupShaderFromFile(GL_FRAGMENT_SHADER, "final_refer_texture.frag");
-    refer_texture_shader.bindDefaults();
-    refer_texture_shader.linkProgram();
-    
+    refer_texture_shader.load("default.vert", "final_refer_texture.frag");
+
     // debug
     test_image.load("test_img.jpg");
 }
@@ -60,18 +56,21 @@ void ofApp::draw(){
     
     // 最後にテクスチャを参照してレンダリングする部分
     ofClear(0);
-    
+    ofPushMatrix();
     refer_texture_shader.begin();
     
     refer_texture_shader.setUniformTexture("reference_texture", main_scene, 0);
     refer_texture_shader.setUniformTexture("texcoord_texture", texcoord_scene, 1);
     refer_texture_shader.setUniform2f("u_resolution", screen_size);
+    ofScale(2.0);
+    ofDrawPlane(0, 0, screen_size.x, screen_size.y);
     
     refer_texture_shader.end();
+    ofPopMatrix();
     
     // debug
     ofSetColor(255);
-    texcoord_scene.draw(vec2(0), screen_size.x, screen_size.y);
+//    texcoord_scene.draw(vec2(0), screen_size.x, screen_size.y);
     
     ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 10);
 }
