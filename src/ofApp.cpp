@@ -6,6 +6,9 @@ void ofApp::setup(){
     ofSetBackgroundColor(0);
     ofSetVerticalSync(false);
     
+    // 大きい雨粒
+    large_scene.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
+    
     // 小さい雨粒
     small_scenes.first.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
     small_scenes.second.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
@@ -33,6 +36,46 @@ void ofApp::update(){
     screen_size = vec2(ofGetWidth(), ofGetHeight());
     float time = ofGetElapsedTimef();
     
+    // 大きい雨粒
+    if (ofGetFrameNum() % 10 == 0) {
+        // 新しい大きい雨粒の生成
+        auto large_drop = new LargeDrop();
+        large_drop->pos = vec2(ofRandom(screen_size.x), ofRandom(screen_size.y * 0.7));
+        
+        float r = ofRandom(10, 40);
+        large_drop->r = r;
+        large_drop->momentum.y = 1+((r-10)*0.1)+ofRandom(2);
+        large_drop->spread = vec2(1.5);
+        large_drops.push_back(large_drop);
+    }
+    
+    for (auto& r : large_drops) {
+        
+        // positionの更新
+        bool moved = r->momentum.y > 0;
+        if (moved && !r->killed) {
+            r->pos += r->momentum * time_scale;
+            // 画面外判定
+            if (r->pos.y > screen_size.y + r->r) r->killed = true;
+        }
+    }
+    
+    // 大きい粒のレンダリング
+    ofPushMatrix();
+    large_scene.begin();
+    ofClearAlpha();
+    ofClear(0, 0, 0, 0);
+    
+    for (const auto& r : large_drops) {
+        
+        // debug
+        ofSetColor(255, 0, 0);
+        ofDrawCircle(r->pos, r->r);
+    }
+    
+    large_scene.end();
+    ofPopMatrix();
+    
     // 小さい雨粒のレンダリング
     ofPushMatrix();
     ofDisableAlphaBlending();
@@ -52,7 +95,7 @@ void ofApp::update(){
         for (int i = 0; i < 11; ++i) {
             vec2 p = vec2(cos((i%10)*PI*.2), sin((i%10)*PI*.2)) * (ofNoise(vec3(move_pos, (i%10)*0.2))*.6 + .4);
             small_drop.addColor(ofFloatColor((p.x + 1.)*.5, (p.y + 1.)*.5, 0.));
-            small_drop.addVertex(vec3(p, .0) * 5.);
+            small_drop.addVertex(vec3(p, .0) * 3.);
         }
         
         small_drop.setMode(OF_PRIMITIVE_TRIANGLE_FAN);
@@ -113,7 +156,7 @@ void ofApp::draw(){
     
     // debug
     ofSetColor(255);
-    texcoord_scene.draw(vec2(0), screen_size.x, screen_size.y);
+    large_scene.draw(vec2(0), screen_size.x, screen_size.y);
     
     ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 10);
 }

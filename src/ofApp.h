@@ -26,6 +26,24 @@ class ofApp : public ofBaseApp{
     // common
     vec2 screen_size;
     
+    struct LargeDrop {
+        float r;
+        vec2 pos;
+        vec2 spread;
+        vec2 momentum;
+        float lastSpawn;
+        float nextSpawn;
+        LargeDrop* parent;
+        float size;
+        bool isNew;
+        bool killed;
+        float shrink;
+    };
+    float time_scale = 1.0;
+    
+    vector<LargeDrop*> large_drops;
+    ofFbo large_scene;
+    
     pair<ofFbo, ofFbo> small_scenes;
     
     ofFbo texcoord_scene;
@@ -33,7 +51,7 @@ class ofApp : public ofBaseApp{
     
     ofFbo main_scene;
     
-    
+
     ofEasyCam cam;
     ofShader refer_texture_shader;
     
