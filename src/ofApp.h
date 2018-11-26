@@ -23,9 +23,13 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
     
+    // common
+    vec2 screen_size;
+    
+    pair<ofFbo, ofFbo> small_scenes;
+    
     ofFbo texcoord_scene;
     ofShader texcoord_shader;
-    ofVboMesh small_drops;
     
     ofFbo main_scene;
     

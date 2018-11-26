@@ -6,6 +6,13 @@ void ofApp::setup(){
     ofSetBackgroundColor(0);
     ofSetVerticalSync(false);
     
+    // 小さい雨粒
+    small_scenes.first.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
+    small_scenes.second.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
+    small_scenes.second.begin();
+    ofClear(0);
+    small_scenes.second.end();
+    
     // 雨粒フィルターを通す前のシーン
     main_scene.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
     
@@ -23,12 +30,43 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
+    screen_size = vec2(ofGetWidth(), ofGetHeight());
+    float time = ofGetElapsedTimef();
     
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-    vec2 screen_size = vec2(ofGetWidth(), ofGetHeight());
+    // 小さい雨粒のレンダリング
+    ofPushMatrix();
+    ofDisableAlphaBlending();
+    small_scenes.first.begin();
+    ofClear(0);
+    small_scenes.second.draw(vec2(0), screen_size.x, screen_size.y);
+    
+    if (ofNoise(time*10.) > 0.3) {
+        vec2 move_pos = vec2(ofRandom(screen_size.x), ofRandom(screen_size.y));
+        ofTranslate(move_pos);
+        ofRotateZRad(ofRandom(M_PI_2));
+        
+        ofVboMesh small_drop;
+        small_drop.enableColors();
+        small_drop.addVertex(vec3(0));
+        small_drop.addColor(ofFloatColor(0.5,0.5,0.));
+        for (int i = 0; i < 11; ++i) {
+            vec2 p = vec2(cos((i%10)*PI*.2), sin((i%10)*PI*.2)) * (ofNoise(vec3(move_pos, (i%10)*0.2))*.6 + .4);
+            small_drop.addColor(ofFloatColor((p.x + 1.)*.5, (p.y + 1.)*.5, 0.));
+            small_drop.addVertex(vec3(p, .0) * 5.);
+        }
+        
+        small_drop.setMode(OF_PRIMITIVE_TRIANGLE_FAN);
+        ofSetColor(255);
+        small_drop.draw();
+    }
+    
+    
+    small_scenes.first.end();
+    ofPopMatrix();
+    
+    swap(small_scenes.first, small_scenes.second);
+    
+//    small_scenes.swap();
     
     // 雨粒フィルターのレンダリング
     ofPushMatrix();
@@ -43,6 +81,7 @@ void ofApp::draw(){
     texcoord_shader.end();
     texcoord_scene.end();
     ofPopMatrix();
+    ofFbo front_small_scene;
     
     // 雨粒フィルターを通す前の画像
     ofPushMatrix();
@@ -53,7 +92,10 @@ void ofApp::draw(){
     
     main_scene.end();
     ofPopMatrix();
-    
+}
+
+//--------------------------------------------------------------
+void ofApp::draw(){
     // 最後にテクスチャを参照してレンダリングする部分
     ofClear(0);
     ofPushMatrix();
@@ -70,7 +112,7 @@ void ofApp::draw(){
     
     // debug
     ofSetColor(255);
-//    texcoord_scene.draw(vec2(0), screen_size.x, screen_size.y);
+    small_scenes.first.draw(vec2(0), screen_size.x, screen_size.y);
     
     ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 10);
 }
