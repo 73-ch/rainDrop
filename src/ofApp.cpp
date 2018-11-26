@@ -76,6 +76,7 @@ void ofApp::update(){
     ofScale(2.0);
     ofSetColor(255);
     texcoord_shader.setUniform2f("u_resolution", screen_size);
+    texcoord_shader.setUniformTexture("small_drops", small_scenes.first, 0);
     ofDrawPlane(0, 0, screen_size.x, screen_size.y);
     
     texcoord_shader.end();
@@ -112,7 +113,7 @@ void ofApp::draw(){
     
     // debug
     ofSetColor(255);
-    small_scenes.first.draw(vec2(0), screen_size.x, screen_size.y);
+    texcoord_scene.draw(vec2(0), screen_size.x, screen_size.y);
     
     ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 10);
 }
