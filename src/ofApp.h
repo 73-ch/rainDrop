@@ -4,6 +4,9 @@
 
 using namespace glm;
 
+#define MIN_R 10
+#define MAX_R 40
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -31,8 +34,8 @@ class ofApp : public ofBaseApp{
         vec2 pos;
         vec2 spread;
         vec2 momentum;
-        float lastSpawn;
-        float nextSpawn;
+        float last_spawn = 0.;
+        float next_spawn = 0.;
         LargeDrop* parent;
         float size;
         bool isNew;
@@ -40,6 +43,10 @@ class ofApp : public ofBaseApp{
         float shrink;
     };
     float time_scale = 1.0;
+    float fall_speed = 1.0;
+    float trail_rate = 1.0;
+    float last_time;
+    
     
     vector<LargeDrop*> large_drops;
     ofFbo large_scene;
