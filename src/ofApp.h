@@ -47,7 +47,7 @@ class ofApp : public ofBaseApp{
         bool killed;
         float shrink;
     };
-    float time_scale = 0.3;
+    float time_scale = 0.9;
     float fall_speed = 1.0;
     float trail_rate = 1.0;
     float last_time;

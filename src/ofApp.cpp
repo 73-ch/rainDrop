@@ -4,7 +4,7 @@
 void ofApp::setup(){
     // oF setup
     ofSetBackgroundColor(0);
-    ofSetVerticalSync(false);
+//    ofSetVerticalSync(false);
     
     // 大きい雨粒
     large_scene.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
@@ -37,7 +37,7 @@ void ofApp::update(){
     float time = ofGetElapsedTimef();
     
     // 大きい雨粒
-    if (ofGetFrameNum() % 10 == 0) {
+    if (ofGetFrameNum() % 10 == 0 && large_drops.size() <= 900) {
         // 新しい大きい雨粒の生成
         auto large_drop = new LargeDrop();
         large_drop->pos = vec2(ofRandom(screen_size.x), ofRandom(screen_size.y * 0.7));
@@ -54,6 +54,7 @@ void ofApp::update(){
         return (a->pos.y*screen_size.y+a->pos.x) > (b->pos.y*screen_size.y+b->pos.x);
     });
     
+    ofLogNotice() << large_drops.size();
     
     vector<LargeDrop*> new_trails;
     vector<LargeDrop*> new_drops;
@@ -77,18 +78,20 @@ void ofApp::update(){
         // update trail
         drop->last_spawn += drop->momentum.y * time_scale + trail_rate;
         
-        if (drop->last_spawn > drop->next_spawn) {
+        if (drop->last_spawn > drop->next_spawn && large_drops.size() <= 900) {
             auto trail_drop = new LargeDrop();
-            trail_drop->pos = drop->pos - vec2(ofRandom(-drop->pos.x, drop->pos.x), drop->r * 0.01);
+            trail_drop->pos = drop->pos + vec2(ofRandom(-drop->r, drop->r)*0.1, -drop->r*0.01);
             
             trail_drop->r = drop->r * ofRandom(0.2, 0.5);
             trail_drop->spread.y = drop->momentum.y * 0.1;
             trail_drop->parent = drop;
             
-//            new_trails.push_back(trail_drop);
+            new_drops.push_back(trail_drop);
+            
             drop->r *= pow(0.97, time_scale);
             drop->last_spawn = 0.0;
             drop->next_spawn = ofRandom(MIN_R, MAX_R) - (drop->momentum.y * 2. * trail_rate) + (MAX_R - drop->r);
+
         }
         
 //        drop->spread.x =  drop->spread.x * powf(0.4, time_scale);
@@ -162,7 +165,7 @@ void ofApp::update(){
         ofSetColor(255, 0, 0);
         if (!r->killed) {
             ofPushMatrix();
-            ofScale(r->spread.x, r->spread.y);
+//            ofScale(r->spread.x, r->spread.y);
             ofTranslate(r->pos);
             ofDrawCircle(vec2(0), r->r);
             ofPopMatrix();
