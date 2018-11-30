@@ -4,8 +4,13 @@
 
 using namespace glm;
 
-#define MIN_R 10
-#define MAX_R 40
+#define MIN_R 10.0
+#define MAX_R 40.0
+#define COLLISION_R 0.65
+#define COLLISION_INCREASE 0.01
+#define COLLISION_BOOST 1.0
+#define COLLISION_BOOST_SPEED 0.05
+#define DROP_RATE 50
 
 class ofApp : public ofBaseApp{
 
@@ -32,8 +37,8 @@ class ofApp : public ofBaseApp{
     struct LargeDrop {
         float r;
         vec2 pos;
-        vec2 spread;
-        vec2 momentum;
+        vec2 spread = vec2(0);
+        vec2 momentum = vec2(0);
         float last_spawn = 0.;
         float next_spawn = 0.;
         LargeDrop* parent;
@@ -42,7 +47,7 @@ class ofApp : public ofBaseApp{
         bool killed;
         float shrink;
     };
-    float time_scale = 1.0;
+    float time_scale = 0.3;
     float fall_speed = 1.0;
     float trail_rate = 1.0;
     float last_time;

@@ -49,63 +49,102 @@ void ofApp::update(){
         large_drops.push_back(large_drop);
     }
     
-    vector<LargeDrop*> new_trails;
+    // sort
+    sort(large_drops.begin(), large_drops.end(), [&](const LargeDrop* a, const LargeDrop* b){
+        return (a->pos.y*screen_size.y+a->pos.x) > (b->pos.y*screen_size.y+b->pos.x);
+    });
     
-    for (auto& r : large_drops) {
+    
+    vector<LargeDrop*> new_trails;
+    vector<LargeDrop*> new_drops;
+    
+    for (int i = 0; i < large_drops.size(); ++i) {
+        auto drop = large_drops[i];
         // update gravity
-        if (ofRandom(1.0) <= (r->r - (MIN_R * fall_speed)) * (.1 / (time - last_time) * time_scale)) {
-            r->momentum.y += ofRandom((r->r/MAX_R)*4);
+        if (ofRandom(1.0) <= (drop->r - (MIN_R * fall_speed)) * (.1 / (MAX_R - MIN_R) * time_scale)) {
+            drop->momentum.y += ofRandom((drop->r/MAX_R)*4);
         }
         
         // clean small drop(?)
-        if (r->r <= MIN_R && ofRandom(1.0) <= time_scale * 0.05) {
-            r->shrink += 0.01;
+        if (drop->r <= MIN_R && ofRandom(1.0) <= time_scale * 0.05) {
+            drop->shrink += 0.01;
         }
         
         // update shrinkage
-        r->r -= r->shrink * time_scale;
-        if (r->r <= 0) r->killed = true;
+        drop->r -= drop->shrink * time_scale;
+        if (drop->r <= 0) drop->killed = true;
         
         // update trail
-        r->last_spawn += r->momentum.y * time_scale + trail_rate;
+        drop->last_spawn += drop->momentum.y * time_scale + trail_rate;
         
-        if (r->last_spawn > r->next_spawn) {
+        if (drop->last_spawn > drop->next_spawn) {
             auto trail_drop = new LargeDrop();
-            trail_drop->pos = r->pos - vec2(ofRandom(-r->pos.x, r->pos.x), r->r * 0.01);
+            trail_drop->pos = drop->pos - vec2(ofRandom(-drop->pos.x, drop->pos.x), drop->r * 0.01);
             
-            trail_drop->r = r->r * ofRandom(0.2, 0.5);
-            trail_drop->spread.y = r->momentum.y * 0.1;
-            trail_drop->parent = r;
+            trail_drop->r = drop->r * ofRandom(0.2, 0.5);
+            trail_drop->spread.y = drop->momentum.y * 0.1;
+            trail_drop->parent = drop;
             
-            new_trails.push_back(trail_drop);
-            
-            r->last_spawn = 0.0;
-            r->next_spawn = ofRandom(MIN_R, MAX_R) - (r->momentum.y * 2. * trail_rate) + (MAX_R - r->r);
+//            new_trails.push_back(trail_drop);
+            drop->r *= pow(0.97, time_scale);
+            drop->last_spawn = 0.0;
+            drop->next_spawn = ofRandom(MIN_R, MAX_R) - (drop->momentum.y * 2. * trail_rate) + (MAX_R - drop->r);
         }
         
-        r->spread *= vec2(pow(0.4, time_scale), pow(0.7, time_scale));
+//        drop->spread.x =  drop->spread.x * powf(0.4, time_scale);
+//        drop->spread *= vec2(pow(0.4, time_scale), pow(0.7, time_scale));
         
         // positionの更新
-        bool moved = r->momentum.y > 0;
-        if (moved && !r->killed) {
-            r->pos += r->momentum * time_scale;
+        bool moved = drop->momentum.y > 0;
+        if (moved && !drop->killed) {
+            drop->pos += drop->momentum * time_scale;
             // 画面外判定
-            if (r->pos.y > screen_size.y + r->r) r->killed = true;
+            if (drop->pos.y > screen_size.y + drop->r) drop->killed = true;
         }
         
         // collision
+        bool check_collision = (moved || drop->isNew) && !drop->killed;
+        drop->isNew = false;
+        
+        if (check_collision) {
+            for (int j = i; j < large_drops.size() && j < i + 70; j++) {
+                auto drop2 = large_drops[j];
+                if ((drop->r > drop2->r) && drop->parent != drop2 && drop2->parent != drop && !drop2->killed) {
+                    vec2 dist = drop2->pos - drop->pos;
+                    float d = sqrt(dot(dist, dist)); // ここ自分で置き換えたので要注意
+                    if (d < (drop->r + drop2->r) * (COLLISION_R + (drop->momentum.y * COLLISION_INCREASE * time_scale))) {
+                        const float a1 = PI * (drop->r * drop->r);
+                        const float a2 = PI * (drop2->r * drop2->r);
+                        float target_r = std::min(sqrt((a1 + (a2 * .8))/ PI), MAX_R);
+                        drop2->r = target_r;
+                        drop2->momentum.x = dist.x*.1;
+                        drop2->spread = vec2(0);
+                        drop2->killed = true;
+                        drop2->momentum.y = std::max(drop2->momentum.y, (float)std::min({MAX_R,drop->momentum.y + (target_r*COLLISION_BOOST_SPEED) + COLLISION_BOOST}));
+                    }
+                }
+            }
+        }
         
         // slowdown momentum
-        r->momentum.y -= std::max(1.0, (MIN_R * 0.5) - r->momentum.y) * .1 * time_scale;
-        if (r->momentum.y < 0) r->momentum.y = 0;
-        r->momentum.x *= pow(0.7, time_scale);
+        drop->momentum.y -= std::max(1.0, (MIN_R * 0.5) - drop->momentum.y) * .1 * time_scale;
+        if (drop->momentum.y < 0) drop->momentum.y = 0;
+        drop->momentum.x *= pow(0.7, time_scale);
+        
+        if (!drop->killed) {
+            new_drops.push_back(drop);
+//            if (moved && DROP_RATE > 0)
+        }
     }
     
+    large_drops.clear();
+    swap(large_drops, new_drops);
+    
     // new_trailsをlarge_dropsに追加
-    if (!new_trails.empty()) {
-        large_drops.insert(large_drops.end(), new_trails.begin(), new_trails.end());
-        new_trails.clear();
-    }
+//    if (!new_trails.empty()) {
+//        large_drops.insert(large_drops.end(), new_trails.begin(), new_trails.end());
+//        new_trails.clear();
+//    }
     
 //    for (auto i = large_drops.begin(); i != large_drops.end(); ++i) {
 //        if (i->) large_drops.erase(i);
