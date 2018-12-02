@@ -5,6 +5,7 @@ void ofApp::setup(){
     // oF setup
     ofSetBackgroundColor(0);
 //    ofSetVerticalSync(false);
+    ofSetFrameRate(60);
     
     // 大きい雨粒
     large_scene.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
@@ -54,8 +55,6 @@ void ofApp::update(){
         return (a->pos.y*screen_size.y+a->pos.x) > (b->pos.y*screen_size.y+b->pos.x);
     });
     
-    ofLogNotice() << large_drops.size();
-    
     vector<LargeDrop*> new_trails;
     vector<LargeDrop*> new_drops;
     
@@ -94,8 +93,7 @@ void ofApp::update(){
 
         }
         
-//        drop->spread.x =  drop->spread.x * powf(0.4, time_scale);
-//        drop->spread *= vec2(pow(0.4, time_scale), pow(0.7, time_scale));
+        drop->spread *= vec2(pow(0.4, time_scale), pow(0.7, time_scale));
         
         // positionの更新
         bool moved = drop->momentum.y > 0;
@@ -143,16 +141,6 @@ void ofApp::update(){
     large_drops.clear();
     swap(large_drops, new_drops);
     
-    // new_trailsをlarge_dropsに追加
-//    if (!new_trails.empty()) {
-//        large_drops.insert(large_drops.end(), new_trails.begin(), new_trails.end());
-//        new_trails.clear();
-//    }
-    
-//    for (auto i = large_drops.begin(); i != large_drops.end(); ++i) {
-//        if (i->) large_drops.erase(i);
-//    }
-    
     // 大きい粒のレンダリング
     ofPushMatrix();
     large_scene.begin();
@@ -165,8 +153,8 @@ void ofApp::update(){
         ofSetColor(255, 0, 0);
         if (!r->killed) {
             ofPushMatrix();
-//            ofScale(r->spread.x, r->spread.y);
             ofTranslate(r->pos);
+            ofScale(r->spread.x + 1., r->spread.y + 1.0);
             ofDrawCircle(vec2(0), r->r);
             ofPopMatrix();
         }
