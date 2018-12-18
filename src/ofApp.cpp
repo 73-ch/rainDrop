@@ -4,8 +4,8 @@
 void ofApp::setup(){
     // oF setup
     ofSetBackgroundColor(0);
-//    ofSetVerticalSync(false);
-    ofSetFrameRate(60);
+    ofSetVerticalSync(false);
+//    ofSetFrameRate(60);
     
     // 大きい雨粒
     large_scene.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
@@ -45,7 +45,7 @@ void ofApp::update(){
     float time = ofGetElapsedTimef();
     
     // 大きい雨粒
-    if (ofGetFrameNum() % 5 == 0 && large_drops.size() <= 900) {
+    if (ofGetFrameNum() % 5 == 0 && large_drops.size() <= 3000) {
         // 新しい大きい雨粒の生成
         auto large_drop = new LargeDrop();
         large_drop->pos = vec2(ofRandom(screen_size.x), ofRandom(screen_size.y * 0.7));
@@ -170,6 +170,7 @@ void ofApp::update(){
             vec2 p = vec2(r->r) * (vec2(1.0) + r->spread);
             rain_shader.setUniform2f("u_resolution", p);
             rain_shader.setUniform2f("screen_size", screen_size);
+            rain_shader.setUniform3f("u_color", vec3(1.0));
             ofDrawRectangle(vec2(0.), p.x, p.y);
             
             ofPopMatrix();
@@ -216,7 +217,6 @@ void ofApp::update(){
     
     swap(small_scenes.first, small_scenes.second);
     
-//    small_scenes.swap();
     
     // 雨粒フィルターのレンダリング
     ofPushMatrix();
@@ -231,28 +231,30 @@ void ofApp::update(){
     ofDrawPlane(0, 0, screen_size.x, screen_size.y);
     
     texcoord_shader.end();
+    ofPopMatrix();
     
     ofEnableAlphaBlending();
-    ofEnableDepthTest();
+//    ofEnableDepthTest();
+    ofClearAlpha();
     
     ofSetColor(0);
     ofPushMatrix();
+    rain_shader.begin();
     for (const auto& r : large_drops) {
         if (!r->killed) {
             ofPushMatrix();
-            ofTranslate(r->pos);
-            //            ofScale(r->spread.x + 1., r->spread.y + 1.0);
-            //            drop_image.draw(vec2(-r->r*.5), r->r, r->r);
+            ofTranslate(r->pos - vec2(r->r) * .5);
             
-            ofSetColor(0,0,0,255);
             vec2 p = vec2(r->r) * (vec2(1.0) + r->spread);
             rain_shader.setUniform2f("u_resolution", p);
             rain_shader.setUniform2f("screen_size", screen_size);
-            ofDrawRectangle(-p*.5, p.x, p.y);
+            rain_shader.setUniform3f("u_color", vec3(0));
+            ofDrawRectangle(vec2(0.), p.x, p.y);
             
             ofPopMatrix();
         }
     }
+    rain_shader.end();
     ofPopMatrix();
     ofDisableAlphaBlending();
     ofDisableDepthTest();
@@ -283,7 +285,7 @@ void ofApp::draw(){
     refer_texture_shader.begin();
     ofSetColor(255, 255,255,255);
     refer_texture_shader.setUniformTexture("reference_texture", main_scene, 0);
-    refer_texture_shader.setUniformTexture("smallz2_drop_texcoord_texture", texcoord_scene, 1);
+    refer_texture_shader.setUniformTexture("small_drop_texcoord_texture", texcoord_scene, 1);
     refer_texture_shader.setUniformTexture("large_drop_texcoord_texture", large_scene, 2);
     refer_texture_shader.setUniform2f("u_resolution", screen_size);
     ofScale(2.0);
@@ -294,7 +296,7 @@ void ofApp::draw(){
     
     // debug
     ofSetColor(255);
-    large_scene.draw(vec2(0), screen_size.x, screen_size.y);
+//    texcoord_scene.draw(vec2(0), screen_size.x, screen_size.y);
     
     ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 10);
 }

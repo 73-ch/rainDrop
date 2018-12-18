@@ -26,19 +26,19 @@ void main() {
     vec4 large = texture(large_drop_texcoord_texture, st);
     vec4 small = texture(small_drop_texcoord_texture, st);
     vec2 texcoord;
-    texcoord = large.xy * step(0.4, large.a) + small.xy;
-    texcoord = large.xy;
+//    texcoord = large.xy * step(0.4, large.a) + small.xy;
+    texcoord = large.xy * step(0.4, large.a);
     
-    texcoord *= u_resolution * step(0.5, large.a);
+    texcoord *= u_resolution;
     
 
     vec3 col;
     if (all(equal(texcoord.xy, vec2(0.)))) {
-        col = blur(reference_texture, st, 10.0);
-//        col = texture(reference_texture, st).rgb;
+//        col = blur(reference_texture, st, 10.0);
+        col = texture(reference_texture, st).rgb;
     } else {
-        col = blur(reference_texture, texcoord, 10.0);
-//        col = texture(reference_texture, texcoord).rgb;
+//        col = blur(reference_texture, texcoord, 10.0);
+        col = texture(reference_texture, texcoord).rgb;
     }
 
     output_color = vec4(col, 1.0);

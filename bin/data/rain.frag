@@ -4,6 +4,7 @@ in vec2 v_texcoord;
 in vec2 v_position;
 uniform vec2 u_resolution;
 uniform vec2 screen_size;
+uniform vec3 u_color;
 
 out vec4 out_color;
 
@@ -17,5 +18,5 @@ void main() {
     
     float alpha = pow(1.-distance(vec2(.5,.5), p), 2.0);
     
-    out_color = vec4(final, .0, alpha);
+    out_color = vec4(final * u_color.rg, .0, alpha);
 }
