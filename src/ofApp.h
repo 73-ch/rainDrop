@@ -54,6 +54,7 @@ class ofApp : public ofBaseApp{
     float last_time;
     
     bool raining = true;
+    float time;
     
     
     vector<LargeDrop*> large_drops;
