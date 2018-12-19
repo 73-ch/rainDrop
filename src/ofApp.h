@@ -6,7 +6,7 @@ using namespace glm;
 
 #define MIN_R 10.0
 #define MAX_R 40.0
-#define COLLISION_R .85
+#define COLLISION_R .65
 #define COLLISION_INCREASE 0.01
 #define COLLISION_BOOST 1.0
 #define COLLISION_BOOST_SPEED 0.05
@@ -46,20 +46,18 @@ class ofApp : public ofBaseApp{
         bool isNew;
         bool killed;
         float shrink;
+        float spawn_time;
     };
-    float time_scale = 1.9;
-    float fall_speed = 1.0;
+    float time_scale = 1.0;
+    float fall_speed = 0.5;
     float trail_rate = 1.0;
     float last_time;
+    
+    bool raining = true;
     
     
     vector<LargeDrop*> large_drops;
     ofFbo large_scene;
-    
-    pair<ofFbo, ofFbo> small_scenes;
-    
-    ofFbo texcoord_scene;
-    ofShader texcoord_shader;
     
     ofFbo main_scene;
     

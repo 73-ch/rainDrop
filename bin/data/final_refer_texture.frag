@@ -1,7 +1,6 @@
 #version 330
 
 uniform sampler2DRect reference_texture;
-uniform sampler2DRect small_drop_texcoord_texture;
 uniform sampler2DRect large_drop_texcoord_texture;
 
 uniform vec2 u_resolution;
@@ -24,9 +23,7 @@ out vec4 output_color;
 void main() {
     vec2 st = upset_y(gl_FragCoord.xy, u_resolution);
     vec4 large = texture(large_drop_texcoord_texture, st);
-    vec4 small = texture(small_drop_texcoord_texture, st);
     vec2 texcoord;
-//    texcoord = large.xy * step(0.4, large.a) + small.xy;
     texcoord = large.xy * step(0.4, large.a);
     
     texcoord *= u_resolution;
